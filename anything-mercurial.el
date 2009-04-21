@@ -131,6 +131,13 @@
 
 ;; (anything 'anything-c-source-qapplied-patchs)
 
+(defun anything-c-qunapplied-delete (elm)
+  (if anything-c-qunapplied-show-headers
+      (progn
+        (string-match "^patch-r[0-9]+" elm)
+        (xhg-qdelete (match-string 0 elm)))
+      (xhg-qdelete elm)))
+
 (defvar anything-c-qunapplied-show-headers nil)
 (defvar anything-c-source-qunapplied-patchs
   '((name . "Hg Qunapplied Patchs")
@@ -161,13 +168,10 @@
                                (xhg-qpush)))
                ("hg-qpush-all" . (lambda (elm)
                                    (xhg-qpush t)))
-               ("hg-qdelete" . (lambda (elm)
-                                 (if anything-c-qunapplied-show-headers
-                                     (progn
-                                       (string-match "^patch-r[0-9]+" elm)
-                                       (xhg-qdelete (match-string 0 elm)))
-                                     (xhg-qdelete elm))))))))
-
+               ("hg-qdelete" . anything-c-qunapplied-delete)
+               ("hg-qdelete all marked" . (lambda (elm)
+                                            (dolist (i anything-c-marked-candidate-list)
+                                              (anything-c-qunapplied-delete i))))))))
 
 ;; (anything 'anything-c-source-qunapplied-patchs)
 
