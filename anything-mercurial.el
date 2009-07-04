@@ -36,10 +36,27 @@
  
 ;;; Code:
 
+;; Internal use only!
 (defvar anything-qapplied-alist nil)
+(defvar anything-c-qpatch-directory nil)
+(defvar anything-c-qunpatch-directory nil)
 (defvar anything-c-qapplied-show-headers t)
+
+;; User variables
 (defvar anything-hg-default-export-fname ".hg-anything-export"
-  "You can put in this file the path of your usual dir to export patchs.")
+  "*You can put in this file the path of your usual dir to export patchs.")
+
+;; Clean up
+(add-hook 'anything-before-initialize-hook #'(lambda ()
+                                               (setq anything-c-qunpatch-directory nil)))
+
+(add-hook 'anything-before-initialize-hook #'(lambda ()
+                                               (setq anything-qapplied-alist nil)))
+
+(add-hook 'anything-before-initialize-hook #'(lambda ()
+                                               (setq anything-c-qpatch-directory nil)))
+
+;; Sources
 (defvar anything-c-source-qapplied-patchs
   '((name . "Hg Qapplied Patchs")
     (volatile)
