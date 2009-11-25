@@ -100,7 +100,12 @@
                ("Hg Qrefresh" . (lambda (elm)
                                   (xhg-qrefresh)))
                ("Rename Header" . (lambda (elm)
-                                    (xhg-qrefresh-header)))
+                                    (xhg-qrefresh-header)
+                                    (save-window-excursion
+                                      (xhg-log
+                                       (cadr (assoc elm anything-qapplied-alist)) nil t))
+                                    (save-excursion
+                                      (display-buffer "*xhg-log*"))))
                ("Hg Qnew" . (lambda (elm)
                               (xhg-qnew (xhg-qnew-name-patch)
                                         "New patch")))
