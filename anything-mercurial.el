@@ -102,6 +102,8 @@
                ("Rename Header" . (lambda (elm)
                                     (xhg-qrefresh-header)
                                     (save-window-excursion
+                                      (when (get-buffer "*xhg-log*")
+                                        (kill-buffer "*xhg-log*"))
                                       (xhg-log
                                        (cadr (assoc elm anything-qapplied-alist)) nil t))
                                     (save-excursion
