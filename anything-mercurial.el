@@ -192,10 +192,9 @@
                                (xhg-qpush)))
                ("hg-qpush-all" . (lambda (elm)
                                    (xhg-qpush t)))
-               ("hg-qdelete" . anything-c-qunapplied-delete)
-               ("hg-qdelete all marked" . (lambda (elm)
-                                            (dolist (i anything-c-marked-candidate-list)
-                                              (anything-c-qunapplied-delete i))))))))
+               ("hg-qdelete patch(s)" . (lambda (elm)
+                                          (dolist (i (anything-marked-candidates))
+                                            (anything-c-qunapplied-delete i))))))))
 
 ;; (anything 'anything-c-source-qunapplied-patchs)
 
