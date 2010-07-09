@@ -94,26 +94,31 @@
                             (setq applied-patchs (reverse applied-patchs))))
                       (error nil))))
     (persistent-action . (lambda (elm)
-                           (xhg-qpop)
-                           (anything-delete-current-selection)))
+                           (let ((default-directory anything-c-qpatch-directory))
+                             (xhg-qpop)
+                             (anything-delete-current-selection))))
     (action . (("Show Patch" . (lambda (elm)
-                                 (xhg-log (cadr (assoc elm anything-qapplied-alist))
-                                          nil
-                                          t)))
+                                 (let ((default-directory anything-c-qpatch-directory))
+                                   (xhg-log (cadr (assoc elm anything-qapplied-alist))
+                                            nil
+                                            t))))
                ("Hg Qrefresh" . (lambda (elm)
-                                  (xhg-qrefresh)))
+                                  (let ((default-directory anything-c-qpatch-directory))
+                                    (xhg-qrefresh))))
                ("Rename Header" . (lambda (elm)
-                                    (xhg-qrefresh-header)
-                                    (save-window-excursion
-                                      (when (get-buffer "*xhg-log*")
-                                        (kill-buffer "*xhg-log*"))
-                                      (xhg-log
-                                       (cadr (assoc elm anything-qapplied-alist)) nil t))
-                                    (save-excursion
-                                      (display-buffer "*xhg-log*"))))
+                                    (let ((default-directory anything-c-qpatch-directory))
+                                      (xhg-qrefresh-header)
+                                      (save-window-excursion
+                                        (when (get-buffer "*xhg-log*")
+                                          (kill-buffer "*xhg-log*"))
+                                        (xhg-log
+                                         (cadr (assoc elm anything-qapplied-alist)) nil t))
+                                      (save-excursion
+                                        (display-buffer "*xhg-log*")))))
                ("Hg Qnew" . (lambda (elm)
-                              (xhg-qnew (xhg-qnew-name-patch)
-                                        "New patch")))
+                              (let ((default-directory anything-c-qpatch-directory))
+                                (xhg-qnew (xhg-qnew-name-patch)
+                                          "New patch"))))
                ("Export" . (lambda (elm)
                              (let* ((abs-export-fname (expand-file-name
                                                       anything-hg-default-export-fname
@@ -123,24 +128,26 @@
                                                            (insert-file-contents abs-export-fname)
                                                            (replace-regexp-in-string "\n" "" (buffer-string)))
                                                          anything-c-qpatch-directory)))
-                                    (xhg-export
-                                     (int-to-string (cadr (assoc elm anything-qapplied-alist)))
-                                      (read-from-minibuffer "Destination: "
-                                                            nil nil nil nil
-                                                            (expand-file-name (if (string-match "^patch-r[0-9]+" elm)
-                                                                                  (match-string 0 elm)
-                                                                                  "Initial-patch")
-                                                                              export-dir-name))))))
+                               (xhg-export
+                                (int-to-string (cadr (assoc elm anything-qapplied-alist)))
+                                (read-from-minibuffer "Destination: "
+                                                      nil nil nil nil
+                                                      (expand-file-name (if (string-match "^patch-r[0-9]+" elm)
+                                                                            (match-string 0 elm)
+                                                                            "Initial-patch")
+                                                                        export-dir-name))))))
                ("Export via Mail" . (lambda (elm)
-                                      (xhg-export-via-mail
-                                       (int-to-string (cadr (assoc elm anything-qapplied-alist))))))
+                                      (let ((default-directory anything-c-qpatch-directory))
+                                        (xhg-export-via-mail
+                                         (int-to-string (cadr (assoc elm anything-qapplied-alist)))))))
                ("Apply all patchs" . (lambda (elm)
-                                       (xhg-qconvert-to-permanent)))
+                                       (let ((default-directory anything-c-qpatch-directory))
+                                         (xhg-qconvert-to-permanent))))
                ("Uniquify all patchs from rev" . (lambda (elm)
                                           (let ((patch-name (if (string-match "^patch-r[0-9]+" elm)
                                                                 (match-string 0 elm)
                                                                 "Initial-patch")))
-                                            (xhg-qsingle (concat default-directory
+                                            (xhg-qsingle (concat anything-c-qpatch-directory
                                                                  "Single"
                                                                  patch-name
                                                                  "ToTip.patch") patch-name))))
@@ -148,12 +155,15 @@
                 . (lambda (elm)
                     (let ((patch-name (if (string-match "^patch-r[0-9]+" elm)
                                           (match-string 0 elm)
-                                          "Initial-patch")))
+                                          "Initial-patch"))
+                          (default-directory anything-c-qpatch-directory))
                       (xhg-mq-export-via-mail patch-name t))))
                ("Hg-Qpop (top of stack)" . (lambda (elm)
-                                             (xhg-qpop)))
+                                             (let ((default-directory anything-c-qpatch-directory))
+                                               (xhg-qpop))))
                ("Hg-Qpop-All" . (lambda (elm)
-                                  (xhg-qpop t)))))))
+                                  (let ((default-directory anything-c-qpatch-directory))
+                                    (xhg-qpop t))))))))
 
 
 ;; (anything 'anything-c-source-qapplied-patchs)
@@ -172,7 +182,11 @@
     (init . (lambda ()
               (condition-case nil
                   (setq anything-c-qunpatch-directory
-                        (xhg-tree-root (expand-file-name default-directory)))
+                        (xhg-tree-root (expand-file-name
+                                        (if (eq major-mode 'dired-mode)
+                                            (dired-current-directory)
+                                            default-directory))))
+
                 (error nil))))
     (candidates . (lambda ()
                     (condition-case nil
@@ -189,15 +203,19 @@
                             unapplied-patchs))
                       (error nil))))
     (persistent-action . (lambda (elm)
-                           (xhg-qpush)
-                           (anything-delete-current-selection)))
+                           (let ((default-directory anything-c-qpatch-directory))
+                             (xhg-qpush)
+                             (anything-delete-current-selection))))
     (action . (("hg-qpush" . (lambda (elm)
-                               (xhg-qpush)))
+                               (let ((default-directory anything-c-qpatch-directory))
+                                 (xhg-qpush))))
                ("hg-qpush-all" . (lambda (elm)
-                                   (xhg-qpush t)))
+                                   (let ((default-directory anything-c-qpatch-directory))
+                                     (xhg-qpush t))))
                ("hg-qdelete patch(s)" . (lambda (elm)
-                                          (dolist (i (anything-marked-candidates))
-                                            (anything-c-qunapplied-delete i))))))))
+                                          (let ((default-directory anything-c-qpatch-directory))
+                                            (dolist (i (anything-marked-candidates))
+                                              (anything-c-qunapplied-delete i)))))))))
 
 ;; (anything 'anything-c-source-qunapplied-patchs)
 
