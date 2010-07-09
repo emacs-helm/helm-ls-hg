@@ -63,7 +63,10 @@
     (init . (lambda ()
               (condition-case nil
                   (setq anything-c-qpatch-directory
-                        (xhg-tree-root (expand-file-name default-directory)))
+                        (xhg-tree-root (expand-file-name
+                                        (if (eq major-mode 'dired-mode)
+                                            (dired-current-directory)
+                                            default-directory))))
                 (error nil))))
     (candidates . (lambda ()
                     (condition-case nil
