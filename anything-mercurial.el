@@ -120,7 +120,8 @@
                                 (xhg-qnew (xhg-qnew-name-patch)
                                           "New patch"))))
                ("Export" . (lambda (elm)
-                             (let* ((abs-export-fname (expand-file-name
+                             (let* ((default-directory anything-c-qpatch-directory)
+                                    (abs-export-fname (expand-file-name
                                                       anything-hg-default-export-fname
                                                       anything-c-qpatch-directory))
                                     (export-dir-name (if (file-exists-p abs-export-fname)
@@ -144,7 +145,8 @@
                                        (let ((default-directory anything-c-qpatch-directory))
                                          (xhg-qconvert-to-permanent))))
                ("Uniquify all patchs from rev" . (lambda (elm)
-                                          (let ((patch-name (if (string-match "^patch-r[0-9]+" elm)
+                                          (let ((default-directory anything-c-qpatch-directory)
+                                                (patch-name (if (string-match "^patch-r[0-9]+" elm)
                                                                 (match-string 0 elm)
                                                                 "Initial-patch")))
                                             (xhg-qsingle (concat anything-c-qpatch-directory
