@@ -107,7 +107,8 @@
     (xhg-qrefresh)))
 
 (defun anything-hg-applied-rename-header (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+  (let ((default-directory anything-c-qpatch-directory)
+        (win-conf (current-window-configuration)))
     (xhg-qrefresh-header)
     (save-window-excursion
       (when (get-buffer "*xhg-log*")
@@ -115,7 +116,8 @@
       (xhg-log
        (cadr (assoc elm anything-qapplied-alist)) nil t))
     (save-excursion
-      (display-buffer "*xhg-log*"))))
+      (display-buffer "*xhg-log*"))
+    (dvc-buffer-push-previous-window-config win-conf)))
 
 (defun anything-hg-applied-qnew (elm)
   (let ((default-directory anything-c-qpatch-directory))
