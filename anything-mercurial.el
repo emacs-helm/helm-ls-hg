@@ -108,13 +108,11 @@
 
 (defun anything-hg-applied-rename-header (elm)
   (let ((default-directory anything-c-qpatch-directory))
-    (xhg-qrefresh-header)
     (when (get-buffer "*xhg-log*")
       (kill-buffer "*xhg-log*"))
     (xhg-log
-     (cadr (assoc elm anything-qapplied-alist)) nil t)))
-    ;(save-excursion
-    (pop-to-buffer "*xhg-log*" t)))
+     (cadr (assoc elm anything-qapplied-alist)) nil t)
+    (xhg-qrefresh-header)))
 
 (defun anything-hg-applied-qnew (elm)
   (let ((default-directory anything-c-qpatch-directory))
