@@ -184,6 +184,7 @@
     (action . (("Show Patch" . anything-hg-applied-show-patch)
                ("Hg Qrefresh" . anything-hg-applied-refresh)
                ("Rename Header" . anything-hg-applied-rename-header)
+               ("hg rename patch" . anything-hg-qrename)
                ("Hg Qnew" . anything-hg-applied-qnew)
                ("Export" . anything-hg-applied-export)
                ("Export via Mail" . anything-hg-applied-export-via-mail)
@@ -246,6 +247,10 @@
     (dolist (i (anything-marked-candidates))
       (anything-c-qunapplied-delete i))))
 
+(defun anything-hg-qrename (elm)
+  (let ((default-directory anything-c-qpatch-directory))
+    (xhg-qrename elm (read-string "New patch name: " elm))))
+
 (defvar anything-c-qunapplied-show-headers nil)
 (defvar anything-c-source-qunapplied-patchs
   '((name . "Hg Qunapplied Patchs")
@@ -255,6 +260,7 @@
     (persistent-action . anything-hg-unapplied-persistent-action)
     (action . (("hg-qpush" . anything-hg-unapplied-push)
                ("hg-qpush-all" . anything-hg-unapplied-push-all)
+               ("hg rename patch" . anything-hg-qrename)
                ("hg-qdelete patch(s)" . anything-hg-unapplied-delete)))))
 ;; (anything 'anything-c-source-qunapplied-patchs)
 
