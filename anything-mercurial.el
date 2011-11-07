@@ -82,7 +82,7 @@
                       `("tip" "--template" "{rev}" "-R" ,anything-c-qpatch-directory))
                (buffer-string))))
         (setq top (string-to-number top))
-        (setq applied-patchs (remove "" (split-string applied-patchs "\n")))
+        (setq applied-patchs (remove "" (split-string applied-patchs "\n" t)))
         (setq anything-qapplied-alist
               (loop for i in (reverse applied-patchs)
                  collect (list i top)
@@ -109,13 +109,12 @@
 (defun anything-hg-applied-rename-header (elm)
   (let ((default-directory anything-c-qpatch-directory))
     (xhg-qrefresh-header)
-    (save-window-excursion
-      (when (get-buffer "*xhg-log*")
-        (kill-buffer "*xhg-log*"))
-      (xhg-log
-       (cadr (assoc elm anything-qapplied-alist)) nil t))
-    (save-excursion
-      (display-buffer "*xhg-log*"))))
+    (when (get-buffer "*xhg-log*")
+      (kill-buffer "*xhg-log*"))
+    (xhg-log
+     (cadr (assoc elm anything-qapplied-alist)) nil t)))
+    ;(save-excursion
+    (pop-to-buffer "*xhg-log*" t)))
 
 (defun anything-hg-applied-qnew (elm)
   (let ((default-directory anything-c-qpatch-directory))
@@ -223,7 +222,7 @@
                           `("qunapplied" "-s" "-R" ,anything-c-qunpatch-directory)
                           `("qunapplied" "-R" ,anything-c-qunpatch-directory)))
                (buffer-string))))
-        (setq unapplied-patchs (split-string unapplied-patchs "\n"))
+        (setq unapplied-patchs (split-string unapplied-patchs "\n" t))
         (unless (or (string-match "abort:" (car unapplied-patchs))
                     (zerop (length unapplied-patchs)))
           unapplied-patchs))
