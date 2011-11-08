@@ -133,15 +133,18 @@
                               (with-temp-buffer
                                 (insert-file-contents abs-export-fname)
                                 (replace-regexp-in-string "\n" "" (buffer-string)))
-                              anything-c-qpatch-directory)))
-    (xhg-export
-     (int-to-string (cadr (assoc elm anything-qapplied-alist)))
-     (read-from-minibuffer "Destination: "
-                           nil nil nil nil
-                           (expand-file-name (if (string-match "^patch-r[0-9]+" elm)
-                                                 (match-string 0 elm)
-                                                 "Initial-patch")
-                                             export-dir-name)))))
+                              anything-c-qpatch-directory))
+         (patch-name (expand-file-name (if (string-match "^patch-r[0-9]+" elm)
+                                           (match-string 0 elm)
+                                           "Initial-patch")
+                                       export-dir-name)))
+    (if (file-exists-p patch-name)
+        (error "Error: Patch `%s' already exists" (anything-c-basename patch-name))
+        (xhg-export
+         (int-to-string (cadr (assoc elm anything-qapplied-alist)))
+         (read-from-minibuffer "Destination: "
+                               nil nil nil nil
+                               patch-name)))))
 
 (defun anything-hg-applied-export-via-mail (elm)
   (let ((default-directory anything-c-qpatch-directory))
