@@ -269,6 +269,12 @@
                ("hg-qdelete patch(s)" . anything-hg-unapplied-delete)))))
 ;; (anything 'anything-c-source-qunapplied-patchs)
 
+;;;###autoload
+(defun anything-qpatchs ()
+  (interactive)
+  (anything-1 :sources '(anything-c-source-qapplied-patchs
+                       anything-c-source-qunapplied-patchs)))
+
 (provide 'anything-mercurial)
 
 
