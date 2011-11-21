@@ -272,8 +272,9 @@
 ;;;###autoload
 (defun anything-qpatchs ()
   (interactive)
-  (anything-1 :sources '(anything-c-source-qapplied-patchs
-                       anything-c-source-qunapplied-patchs)))
+  (anything :sources '(anything-c-source-qapplied-patchs
+                       anything-c-source-qunapplied-patchs)
+            :buffer "*anything hg qpatchs*"))
 
 (provide 'anything-mercurial)
 
