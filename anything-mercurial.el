@@ -156,14 +156,18 @@
     (xhg-qconvert-to-permanent)))
 
 (defun anything-hg-applied-uniquify (elm)
-  (let ((default-directory anything-c-qpatch-directory)
-        (patch-name (if (string-match "^patch-r[0-9]+" elm)
-                        (match-string 0 elm)
-                        "Initial-patch")))
-    (xhg-qsingle (concat anything-c-qpatch-directory
-                         "Single"
-                         patch-name
-                         "ToTip.patch") patch-name)))
+  (let* ((default-directory anything-c-qpatch-directory)
+         (patch-name (if (string-match "^patch-r[0-9]+" elm)
+                         (match-string 0 elm)
+                         "Initial-patch"))
+         (dest (concat (file-name-as-directory
+                        anything-c-qpatch-directory)
+                       "Single"
+                       patch-name
+                       "ToTip.patch")))
+    (if (file-exists-p dest)
+        (error "Error: Patch `%s' already exists" dest)
+        (xhg-qsingle dest patch-name))))
 
 (defun anything-hg-applied-export-single-via-mail (elm)
   (let ((patch-name (if (string-match "^patch-r[0-9]+" elm)
