@@ -1,4 +1,4 @@
-;;; anything-mercurial.el --- 
+;;; anything-mercurial.el --- anything interface for mercurial qpatch.
 ;;
 ;; Copyright (C) 2008, 2009 Thierry Volpiatto, all rights reserved
 ;;
@@ -24,23 +24,20 @@
 ;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 ;; Floor, Boston, MA 02110-1301, USA.
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;;; Commentary: 
-;; This file provide two sources for that provide support
-;; for hg qpatchs within `anything'.
-;; `anything-c-source-qapplied-patchs' and
-;; `anything-c-source-qunapplied-patchs'.
-;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Commentary:
+
+;; Need DVC and anything-config.el.
  
 ;;; Code:
+(require 'xhg)
+(require 'anything-config)
 
 ;; Internal use only!
 (defvar anything-qapplied-alist nil)
 (defvar anything-c-qpatch-directory nil)
 (defvar anything-c-qunpatch-directory nil)
 (defvar anything-c-qapplied-show-headers t)
+(defvar anything-c-qunapplied-show-headers nil)
 
 ;; User variables
 (defvar anything-hg-default-export-fname ".hg-anything-export"
@@ -260,7 +257,6 @@
   (let ((default-directory anything-c-qpatch-directory))
     (xhg-qrename elm (read-string "New patch name: " elm))))
 
-(defvar anything-c-qunapplied-show-headers nil)
 (defvar anything-c-source-qunapplied-patchs
   '((name . "Hg Qunapplied Patchs")
     (volatile)
