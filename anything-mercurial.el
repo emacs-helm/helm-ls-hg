@@ -1,8 +1,8 @@
-;;; anything-mercurial.el --- anything interface for mercurial qpatch.
+;;; helm-mercurial.el --- helm interface for mercurial qpatch.
 ;;
 ;; Copyright (C) 2008, 2009 Thierry Volpiatto, all rights reserved
 ;;
-;; Filename: anything-mercurial.el
+;; Filename: helm-mercurial.el
 ;; Description: 
 ;; Author: thierry
 ;; Maintainer: 
@@ -26,61 +26,61 @@
 
 ;;; Commentary:
 
-;; Need DVC and anything-config.el.
+;; Need DVC and helm-config.el.
  
 ;;; Code:
 (require 'xhg)
-(require 'anything-config)
+(require 'helm-config)
 
 ;; Internal use only!
-(defvar anything-qapplied-alist nil)
-(defvar anything-c-qpatch-directory nil)
-(defvar anything-c-qunpatch-directory nil)
-(defvar anything-c-qapplied-show-headers t)
-(defvar anything-c-qunapplied-show-headers nil)
+(defvar helm-qapplied-alist nil)
+(defvar helm-c-qpatch-directory nil)
+(defvar helm-c-qunpatch-directory nil)
+(defvar helm-c-qapplied-show-headers t)
+(defvar helm-c-qunapplied-show-headers nil)
 
 ;; User variables
-(defvar anything-hg-default-export-fname ".hg-anything-export"
+(defvar helm-hg-default-export-fname ".hg-helm-export"
   "*You can put in this file the path of your usual dir to export patchs.")
 
 ;; Clean up
-(add-hook 'anything-before-initialize-hook #'(lambda ()
-                                               (setq anything-c-qunpatch-directory nil)))
+(add-hook 'helm-before-initialize-hook #'(lambda ()
+                                               (setq helm-c-qunpatch-directory nil)))
 
-(add-hook 'anything-before-initialize-hook #'(lambda ()
-                                               (setq anything-qapplied-alist nil)))
+(add-hook 'helm-before-initialize-hook #'(lambda ()
+                                               (setq helm-qapplied-alist nil)))
 
-(add-hook 'anything-before-initialize-hook #'(lambda ()
-                                               (setq anything-c-qpatch-directory nil)))
+(add-hook 'helm-before-initialize-hook #'(lambda ()
+                                               (setq helm-c-qpatch-directory nil)))
 
 
 ;;; Applied patchs
-(defun anything-hg-init-applied ()
+(defun helm-hg-init-applied ()
   (condition-case nil
-      (setq anything-c-qpatch-directory
+      (setq helm-c-qpatch-directory
             (xhg-tree-root (expand-file-name
                             (if (eq major-mode 'dired-mode)
                                 (dired-current-directory)
                                 default-directory))))
     (error nil)))
 
-(defun anything-hg-applied-candidates ()
+(defun helm-hg-applied-candidates ()
   (condition-case nil
       (let ((applied-patchs
              (with-temp-buffer
                (apply #'call-process "hg" nil t nil
-                      (if anything-c-qapplied-show-headers
-                          `("qapplied" "-s" "-R" ,anything-c-qpatch-directory)
-                          `("qapplied" "-R" ,anything-c-qpatch-directory)))
+                      (if helm-c-qapplied-show-headers
+                          `("qapplied" "-s" "-R" ,helm-c-qpatch-directory)
+                          `("qapplied" "-R" ,helm-c-qpatch-directory)))
                (buffer-string)))
             (top
              (with-temp-buffer
                (apply #'call-process "hg" nil t nil
-                      `("tip" "--template" "{rev}" "-R" ,anything-c-qpatch-directory))
+                      `("tip" "--template" "{rev}" "-R" ,helm-c-qpatch-directory))
                (buffer-string))))
         (setq top (string-to-number top))
         (setq applied-patchs (remove "" (split-string applied-patchs "\n" t)))
-        (setq anything-qapplied-alist
+        (setq helm-qapplied-alist
               (loop for i in (reverse applied-patchs)
                  collect (list i top)
                  and do
@@ -90,75 +90,75 @@
           (setq applied-patchs (reverse applied-patchs))))
     (error nil)))
 
-(defun anything-hg-applied-persistent-action (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-applied-persistent-action (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qpop)
-    (anything-delete-current-selection)))
+    (helm-delete-current-selection)))
 
-(defun anything-hg-applied-show-patch (elm)
-  (let ((default-directory anything-c-qpatch-directory))
-    (xhg-log (cadr (assoc elm anything-qapplied-alist)) nil t)))
+(defun helm-hg-applied-show-patch (elm)
+  (let ((default-directory helm-c-qpatch-directory))
+    (xhg-log (cadr (assoc elm helm-qapplied-alist)) nil t)))
 
-(defun anything-hg-applied-refresh (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-applied-refresh (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qrefresh)))
 
-(defun anything-hg-applied-rename-header (elm)
-  (let ((default-directory anything-c-qpatch-directory)
+(defun helm-hg-applied-rename-header (elm)
+  (let ((default-directory helm-c-qpatch-directory)
         (win-conf (current-window-configuration)))
     (xhg-qrefresh-header)
     (save-window-excursion
       (when (get-buffer "*xhg-log*")
         (kill-buffer "*xhg-log*"))
       (xhg-log
-       (cadr (assoc elm anything-qapplied-alist)) nil t))
+       (cadr (assoc elm helm-qapplied-alist)) nil t))
     (save-excursion
       (display-buffer "*xhg-log*"))
     (dvc-buffer-push-previous-window-config win-conf)))
 
-(defun anything-hg-applied-qnew (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-applied-qnew (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qnew (xhg-qnew-name-patch)
               "New patch")))
 
-(defun anything-hg-applied-export (elm)
-  (let* ((default-directory anything-c-qpatch-directory)
+(defun helm-hg-applied-export (elm)
+  (let* ((default-directory helm-c-qpatch-directory)
          (abs-export-fname (expand-file-name
-                            anything-hg-default-export-fname
-                            anything-c-qpatch-directory))
+                            helm-hg-default-export-fname
+                            helm-c-qpatch-directory))
          (export-dir-name (if (file-exists-p abs-export-fname)
                               (with-temp-buffer
                                 (insert-file-contents abs-export-fname)
                                 (replace-regexp-in-string "\n" "" (buffer-string)))
-                              anything-c-qpatch-directory))
+                              helm-c-qpatch-directory))
          (patch-name (expand-file-name (if (string-match "^patch-r[0-9]+" elm)
                                            (match-string 0 elm)
                                            "Initial-patch")
                                        export-dir-name)))
     (if (file-exists-p patch-name)
-        (error "Error: Patch `%s' already exists" (anything-c-basename patch-name))
+        (error "Error: Patch `%s' already exists" (helm-c-basename patch-name))
         (xhg-export
-         (int-to-string (cadr (assoc elm anything-qapplied-alist)))
+         (int-to-string (cadr (assoc elm helm-qapplied-alist)))
          (read-from-minibuffer "Destination: "
                                nil nil nil nil
                                patch-name)))))
 
-(defun anything-hg-applied-export-via-mail (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-applied-export-via-mail (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-export-via-mail
-     (int-to-string (cadr (assoc elm anything-qapplied-alist))))))
+     (int-to-string (cadr (assoc elm helm-qapplied-alist))))))
 
-(defun anything-hg-applied-apply-all-patchs (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-applied-apply-all-patchs (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qconvert-to-permanent)))
 
-(defun anything-hg-applied-uniquify (elm)
-  (let* ((default-directory anything-c-qpatch-directory)
+(defun helm-hg-applied-uniquify (elm)
+  (let* ((default-directory helm-c-qpatch-directory)
          (patch-name (if (string-match "^patch-r[0-9]+" elm)
                          (match-string 0 elm)
                          "Initial-patch"))
          (dest (concat (file-name-as-directory
-                        anything-c-qpatch-directory)
+                        helm-c-qpatch-directory)
                        "Single"
                        patch-name
                        "ToTip.patch")))
@@ -166,68 +166,68 @@
         (error "Error: Patch `%s' already exists" dest)
         (xhg-qsingle dest patch-name))))
 
-(defun anything-hg-applied-export-single-via-mail (elm)
+(defun helm-hg-applied-export-single-via-mail (elm)
   (let ((patch-name (if (string-match "^patch-r[0-9]+" elm)
                         (match-string 0 elm)
                         "Initial-patch"))
-        (default-directory anything-c-qpatch-directory))
+        (default-directory helm-c-qpatch-directory))
     (xhg-mq-export-via-mail patch-name t)))
 
-(defun anything-hg-applied-qpop (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-applied-qpop (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qpop)))
 
-(defun anything-hg-applied-qpop-all (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-applied-qpop-all (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qpop t)))
 
-(defvar anything-c-source-qapplied-patchs
+(defvar helm-c-source-qapplied-patchs
   '((name . "Hg Qapplied Patchs")
     (volatile)
-    (init . anything-hg-init-applied)
-    (candidates . anything-hg-applied-candidates)
-    (persistent-action . anything-hg-applied-persistent-action)
-    (action . (("Show Patch" . anything-hg-applied-show-patch)
-               ("Hg Qrefresh" . anything-hg-applied-refresh)
-               ("Rename Header" . anything-hg-applied-rename-header)
-               ("hg rename patch" . anything-hg-qrename)
-               ("Hg Qnew" . anything-hg-applied-qnew)
-               ("Export" . anything-hg-applied-export)
-               ("Export via Mail" . anything-hg-applied-export-via-mail)
-               ("Apply all patchs" . anything-hg-applied-apply-all-patchs)
-               ("Uniquify all patchs from rev" . anything-hg-applied-uniquify)
+    (init . helm-hg-init-applied)
+    (candidates . helm-hg-applied-candidates)
+    (persistent-action . helm-hg-applied-persistent-action)
+    (action . (("Show Patch" . helm-hg-applied-show-patch)
+               ("Hg Qrefresh" . helm-hg-applied-refresh)
+               ("Rename Header" . helm-hg-applied-rename-header)
+               ("hg rename patch" . helm-hg-qrename)
+               ("Hg Qnew" . helm-hg-applied-qnew)
+               ("Export" . helm-hg-applied-export)
+               ("Export via Mail" . helm-hg-applied-export-via-mail)
+               ("Apply all patchs" . helm-hg-applied-apply-all-patchs)
+               ("Uniquify all patchs from rev" . helm-hg-applied-uniquify)
                ("Export Single Patch via mail"
-                . anything-hg-applied-export-single-via-mail)
-               ("Hg-Qpop (top of stack)" . anything-hg-applied-qpop)
-               ("Hg-Qpop-All" . anything-hg-applied-qpop-all)))))
-;; (anything 'anything-c-source-qapplied-patchs)
+                . helm-hg-applied-export-single-via-mail)
+               ("Hg-Qpop (top of stack)" . helm-hg-applied-qpop)
+               ("Hg-Qpop-All" . helm-hg-applied-qpop-all)))))
+;; (helm 'helm-c-source-qapplied-patchs)
 
 
 ;;; Unapplied patchs
-(defun anything-c-qunapplied-delete (elm)
-  (if anything-c-qunapplied-show-headers
+(defun helm-c-qunapplied-delete (elm)
+  (if helm-c-qunapplied-show-headers
       (progn
         (string-match "^patch-r[0-9]+" elm)
         (xhg-qdelete (match-string 0 elm)))
       (xhg-qdelete elm)))
 
-(defun anything-hg-unapplied-init ()
+(defun helm-hg-unapplied-init ()
   (condition-case nil
-      (setq anything-c-qunpatch-directory
+      (setq helm-c-qunpatch-directory
             (xhg-tree-root (expand-file-name
                             (if (eq major-mode 'dired-mode)
                                 (dired-current-directory)
                                 default-directory))))
     (error nil)))
 
-(defun anything-hg-unapplied-candidates ()
+(defun helm-hg-unapplied-candidates ()
   (condition-case nil
       (let ((unapplied-patchs
              (with-temp-buffer
                (apply #'call-process "hg" nil t nil
-                      (if anything-c-qunapplied-show-headers
-                          `("qunapplied" "-s" "-R" ,anything-c-qunpatch-directory)
-                          `("qunapplied" "-R" ,anything-c-qunpatch-directory)))
+                      (if helm-c-qunapplied-show-headers
+                          `("qunapplied" "-s" "-R" ,helm-c-qunpatch-directory)
+                          `("qunapplied" "-R" ,helm-c-qunpatch-directory)))
                (buffer-string))))
         (setq unapplied-patchs (split-string unapplied-patchs "\n" t))
         (unless (or (string-match "abort:" (car unapplied-patchs))
@@ -235,48 +235,48 @@
           unapplied-patchs))
     (error nil)))
 
-(defun anything-hg-unapplied-persistent-action (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-unapplied-persistent-action (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qpush)
-    (anything-delete-current-selection)))
+    (helm-delete-current-selection)))
 
-(defun anything-hg-unapplied-push (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-unapplied-push (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qpush)))
 
-(defun anything-hg-unapplied-push-all (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-unapplied-push-all (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qpush t)))
 
-(defun anything-hg-unapplied-delete (elm)
-  (let ((default-directory anything-c-qpatch-directory))
-    (dolist (i (anything-marked-candidates))
-      (anything-c-qunapplied-delete i))))
+(defun helm-hg-unapplied-delete (elm)
+  (let ((default-directory helm-c-qpatch-directory))
+    (dolist (i (helm-marked-candidates))
+      (helm-c-qunapplied-delete i))))
 
-(defun anything-hg-qrename (elm)
-  (let ((default-directory anything-c-qpatch-directory))
+(defun helm-hg-qrename (elm)
+  (let ((default-directory helm-c-qpatch-directory))
     (xhg-qrename elm (read-string "New patch name: " elm))))
 
-(defvar anything-c-source-qunapplied-patchs
+(defvar helm-c-source-qunapplied-patchs
   '((name . "Hg Qunapplied Patchs")
     (volatile)
-    (init . anything-hg-unapplied-init)
-    (candidates . anything-hg-unapplied-candidates)
-    (persistent-action . anything-hg-unapplied-persistent-action)
-    (action . (("hg-qpush" . anything-hg-unapplied-push)
-               ("hg-qpush-all" . anything-hg-unapplied-push-all)
-               ("hg rename patch" . anything-hg-qrename)
-               ("hg-qdelete patch(s)" . anything-hg-unapplied-delete)))))
-;; (anything 'anything-c-source-qunapplied-patchs)
+    (init . helm-hg-unapplied-init)
+    (candidates . helm-hg-unapplied-candidates)
+    (persistent-action . helm-hg-unapplied-persistent-action)
+    (action . (("hg-qpush" . helm-hg-unapplied-push)
+               ("hg-qpush-all" . helm-hg-unapplied-push-all)
+               ("hg rename patch" . helm-hg-qrename)
+               ("hg-qdelete patch(s)" . helm-hg-unapplied-delete)))))
+;; (helm 'helm-c-source-qunapplied-patchs)
 
 ;;;###autoload
-(defun anything-qpatchs ()
+(defun helm-qpatchs ()
   (interactive)
-  (anything :sources '(anything-c-source-qapplied-patchs
-                       anything-c-source-qunapplied-patchs)
-            :buffer "*anything hg qpatchs*"))
+  (helm :sources '(helm-c-source-qapplied-patchs
+                       helm-c-source-qunapplied-patchs)
+            :buffer "*helm hg qpatchs*"))
 
-(provide 'anything-mercurial)
+(provide 'helm-mercurial)
 
 
-;;; anything-mercurial.el ends here
+;;; helm-mercurial.el ends here
