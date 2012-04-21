@@ -97,7 +97,8 @@
 
 (defun helm-hg-applied-show-patch (elm)
   (let ((default-directory helm-c-qpatch-directory))
-    (xhg-log (cadr (assoc elm helm-qapplied-alist)) nil t)))
+    (xhg-log (cadr (assoc elm helm-qapplied-alist))
+             nil t default-directory)))
 
 (defun helm-hg-applied-refresh (elm)
   (let ((default-directory helm-c-qpatch-directory))
