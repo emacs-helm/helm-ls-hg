@@ -118,9 +118,10 @@
     (dvc-buffer-push-previous-window-config win-conf)))
 
 (defun helm-hg-applied-qnew (elm)
-  (let ((default-directory helm-c-qpatch-directory))
-    (xhg-qnew (xhg-qnew-name-patch)
-              "New patch")))
+  (let ((default-directory helm-c-qpatch-directory)
+        (patch (xhg-qnew-name-patch)))
+    (xhg-qnew patch "New patch")
+    (message "Now at patch `%s'" patch)))
 
 (defun helm-hg-applied-export (elm)
   (let* ((default-directory helm-c-qpatch-directory)
