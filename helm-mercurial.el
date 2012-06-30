@@ -283,11 +283,15 @@
        (replace-regexp-in-string "\n" "" (buffer-string))))))
 
 (defun helm-hg-root-p (candidate)
+  ;; Check for file existence in case of creation
+  ;; of file or directory.
+  (when (or (file-exists-p candidate)
+            (file-directory-p candidate))
   (let ((default-directory (if (file-directory-p candidate)
                                (file-name-as-directory candidate)
                                (file-name-as-directory
                                 helm-ff-default-directory))))
-    (stringp (helm-hg-root))))
+    (stringp (helm-hg-root)))))
 
 (defun helm-hg-list-files ()
   (let ((dir (helm-hg-root)))
