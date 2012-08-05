@@ -186,21 +186,21 @@
     (xhg-qpop t)))
 
 (defun helm-hg-need-refresh ()
-  (not (string= (shell-command-to-string "hg qdiff") "")))
+  (not (string= (shell-command-to-string "hg diff") "")))
+
+(defun helm-hg-applied-transformer (candidates source)
+  (loop for i in candidates
+        if (helm-hg-need-refresh) collect
+        (cons (concat "[R] " (propertize
+                              i 'face 'font-lock-comment-face)) i)
+        else collect i))
 
 (defvar helm-c-source-qapplied-patchs
   '((name . "Hg Qapplied Patchs")
     (volatile)
     (init . helm-hg-init-applied)
     (candidates . helm-hg-applied-candidates)
-    (filtered-candidate-transformer
-     . (lambda (candidates source)
-         (loop for i in candidates
-               if (helm-hg-need-refresh) collect
-               (cons (concat "[R] " (propertize
-                                     i 'face 'font-lock-comment-face)) i)
-               else collect
-               i)))
+    (filtered-candidate-transformer . helm-hg-applied-transformer)
     (persistent-action . helm-hg-applied-persistent-action)
     (action . (("Show Patch" . helm-hg-applied-show-patch)
                ("Hg Qrefresh" . helm-hg-applied-refresh)
