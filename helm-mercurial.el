@@ -288,6 +288,8 @@
 ;;
 ;;
 (defvar helm-hg-files-cache (make-hash-table :test 'equal))
+(defvar helm-ls-hg-default-directory nil)
+(defvar helm-ls-hg-status-command 'vc-dir)
 
 (defun helm-hg-root ()
   (with-temp-buffer
@@ -339,11 +341,91 @@
            (helm-hg-find-files-in-project)))
      default-directory)))
 
+(defun helm-ls-hg-status ()
+  (with-output-to-string
+      (with-current-buffer standard-output
+        (apply #'process-file
+               "hg"
+               nil t nil
+               (list "status")))))
+
+(defvar helm-c-source-ls-hg-status
+  '((name . "Hg status")
+    (init . (lambda ()
+              (helm-init-candidates-in-buffer
+               "*hg status*"
+               (helm-ls-hg-status))))
+    (candidates-in-buffer)
+    (filtered-candidate-transformer . helm-ls-hg-status-transformer)
+    (action-transformer . helm-ls-hg-status-action-transformer)
+    (persistent-action . helm-ls-hg-diff)
+    (persistent-help . "Diff")
+    (action . (("Find file" . helm-find-many-files)
+               ("Hg status" . (lambda (_candidate)
+                                 (funcall helm-ls-hg-status-command
+                                          (helm-hg-root))))))))
+
+(defun helm-ls-hg-status-transformer (candidates source)
+  (loop with root = (let ((default-directory
+                           (or helm-ls-hg-default-directory
+                               (with-helm-current-buffer
+                                 default-directory))))
+                      (helm-hg-root))
+        for i in candidates
+        collect
+        (cond ((string-match "^\\( ?M ?\\)\\(.*\\)" i)
+               (cons (propertize i 'face '((:foreground "yellow")))
+                     (expand-file-name (match-string 2 i) root)))
+               ((string-match "^\\([?]\\{2\\} \\)\\(.*\\)" i)
+                (cons (propertize i 'face '((:foreground "red")))
+                      (expand-file-name (match-string 2 i) root)))
+               ((string-match "^\\([ARC] ?+\\)\\(.*\\)" i)
+                (cons (propertize i 'face '((:foreground "green")))
+                      (expand-file-name (match-string 2 i) root)))
+               ((string-match "^\\( ?[D] ?\\)\\(.*\\)" i)
+                (cons (propertize i 'face '((:foreground "Darkgoldenrod3")))
+                      (expand-file-name (match-string 2 i) root)))
+               ((string-match "^\\([D] ?\\)\\(.*\\)" i)
+                (cons (propertize i 'face '((:foreground "DimGray")))
+                      (expand-file-name (match-string 2 i) root)))
+               (t i))))
+
+(defun helm-ls-hg-status-action-transformer (actions candidate)
+  (let ((disp (helm-get-selection nil t)))
+    (cond ((string-match "^[?]\\{2\\}" disp)
+           (append actions
+                   (list '("Add file(s)"
+                           . (lambda (candidate)
+                               (let ((default-directory
+                                      (file-name-directory candidate))
+                                     (marked (helm-marked-candidates)))
+                                 (vc-call-backend 'Hg 'register marked)))))))
+          ((string-match "^ ?M ?" disp)
+           (append actions (list '("Diff file" . helm-ls-hg-diff)
+                                 '("Commit file(s)"
+                                   . (lambda (candidate)
+                                       (let* ((marked (helm-marked-candidates))
+                                              (default-directory
+                                               (file-name-directory (car marked))))
+                                         (vc-checkin marked 'Hg))))
+                                 '("Revert file" . vc-hg-revert))))
+          ((string-match "^ ?D ?" disp)
+           (append actions (list '("Hg delete" . vc-hg-delete-file))))
+          (t actions))))
+
+(defun helm-ls-hg-diff (candidate)
+  (with-current-buffer (find-file-noselect candidate)
+    (call-interactively #'vc-diff)))
+
 ;;;###autoload
 (defun helm-hg-find-files-in-project ()
   (interactive)
-  (helm :sources 'helm-c-source-hg-list-files
-        :buffer "*hg files*"))
+  (setq helm-ls-hg-default-directory default-directory)
+  (unwind-protect
+       (helm :sources '(helm-c-source-ls-hg-status
+                        helm-c-source-hg-list-files)
+             :buffer "*hg files*")
+    (setq helm-ls-hg-default-directory nil)))
 
 ;;;###autoload
 (defun helm-qpatchs ()
