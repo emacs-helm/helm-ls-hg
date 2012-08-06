@@ -373,44 +373,50 @@
                       (helm-hg-root))
         for i in candidates
         collect
-        (cond ((string-match "^\\( ?M ?\\)\\(.*\\)" i)
+        (cond ((string-match "^\\(M \\)\\(.*\\)" i)
                (cons (propertize i 'face '((:foreground "yellow")))
                      (expand-file-name (match-string 2 i) root)))
-               ((string-match "^\\([?]\\{2\\} \\)\\(.*\\)" i)
+               ((string-match "^\\([?] \\{1\\}\\)\\(.*\\)" i)
                 (cons (propertize i 'face '((:foreground "red")))
                       (expand-file-name (match-string 2 i) root)))
                ((string-match "^\\([ARC] ?+\\)\\(.*\\)" i)
                 (cons (propertize i 'face '((:foreground "green")))
                       (expand-file-name (match-string 2 i) root)))
-               ((string-match "^\\( ?[D] ?\\)\\(.*\\)" i)
+               ((string-match "^\\([!] \\)\\(.*\\)" i)
                 (cons (propertize i 'face '((:foreground "Darkgoldenrod3")))
-                      (expand-file-name (match-string 2 i) root)))
-               ((string-match "^\\([D] ?\\)\\(.*\\)" i)
-                (cons (propertize i 'face '((:foreground "DimGray")))
                       (expand-file-name (match-string 2 i) root)))
                (t i))))
 
+(defun helm-ls-hg-commit (candidate)
+  (let* ((marked (helm-marked-candidates))
+         (default-directory
+          (file-name-directory (car marked))))
+    (vc-checkin marked 'Hg)))
+
 (defun helm-ls-hg-status-action-transformer (actions candidate)
   (let ((disp (helm-get-selection nil t)))
-    (cond ((string-match "^[?]\\{2\\}" disp)
+    (cond ((string-match "^[?]\\{1\\}" disp)
            (append actions
                    (list '("Add file(s)"
                            . (lambda (candidate)
                                (let ((default-directory
                                       (file-name-directory candidate))
                                      (marked (helm-marked-candidates)))
-                                 (vc-call-backend 'Hg 'register marked)))))))
-          ((string-match "^ ?M ?" disp)
+                                 (vc-hg-register marked)))))))
+          ((string-match "^M" disp)
            (append actions (list '("Diff file" . helm-ls-hg-diff)
-                                 '("Commit file(s)"
-                                   . (lambda (candidate)
-                                       (let* ((marked (helm-marked-candidates))
-                                              (default-directory
-                                               (file-name-directory (car marked))))
-                                         (vc-checkin marked 'Hg))))
+                                 '("Commit file(s)" . helm-ls-hg-commit)
                                  '("Revert file" . vc-hg-revert))))
-          ((string-match "^ ?D ?" disp)
-           (append actions (list '("Hg delete" . vc-hg-delete-file))))
+          ((string-match "^\\(A\\|R\\)" disp)
+           (append actions (list '("Commit file(s)" . helm-ls-hg-commit))))
+          ((string-match "^[!]" disp)
+           (append actions (list '("Hg delete"
+                                   . (lambda (candidate)
+                                       (let ((default-directory
+                                              (file-name-directory candidate))
+                                             (marked (helm-marked-candidates)))
+                                         (loop for f in marked
+                                               do (vc-hg-delete-file f))))))))
           (t actions))))
 
 (defun helm-ls-hg-diff (candidate)
