@@ -189,11 +189,16 @@
   (not (string= (shell-command-to-string "hg diff") "")))
 
 (defun helm-hg-applied-transformer (candidates source)
-  (loop for i in candidates
-        if (helm-hg-need-refresh) collect
-        (cons (concat "[R] " (propertize
-                              i 'face 'font-lock-comment-face)) i)
-        else collect i))
+  (let ((state (helm-hg-need-refresh))
+        (cur-patch (car candidates)))
+    (if state
+        (append (list (cons (concat "[R] "
+                                    (propertize
+                                     cur-patch
+                                     'face 'font-lock-comment-face))
+                            cur-patch))
+                (cdr candidates))
+        candidates)))
 
 (defvar helm-c-source-qapplied-patchs
   '((name . "Hg Qapplied Patchs")
