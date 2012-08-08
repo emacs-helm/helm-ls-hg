@@ -387,11 +387,27 @@
                       (expand-file-name (match-string 2 i) root)))
                (t i))))
 
-(defun helm-ls-hg-commit (candidate)
+(defvar helm-ls-vc-delete-buffers-list nil)
+(defun helm-ls-vc-commit (candidate backend)
   (let* ((marked (helm-marked-candidates))
          (default-directory
           (file-name-directory (car marked))))
-    (vc-checkin marked 'Hg)))
+    (loop for f in marked
+          unless (or (find-buffer-visiting f)
+                     (not (file-exists-p f)))
+          do (push (find-file-noselect f)
+                   helm-ls-vc-delete-buffers-list))
+    (add-hook 'vc-checkin-hook 'helm-vc-checkin-hook)
+    (vc-checkin marked backend)))
+
+(defun helm-vc-checkin-hook ()
+  (when helm-ls-vc-delete-buffers-list
+    (loop for b in helm-ls-vc-delete-buffers-list
+          do (kill-buffer b)
+          finally (setq helm-ls-vc-delete-buffers-list nil))))
+
+(defun helm-ls-hg-commit (candidate)
+  (helm-ls-vc-commit candidate 'Hg))
 
 (defun helm-ls-hg-status-action-transformer (actions candidate)
   (let ((disp (helm-get-selection nil t)))
@@ -430,7 +446,7 @@
   (unwind-protect
        (helm :sources '(helm-c-source-ls-hg-status
                         helm-c-source-hg-list-files)
-             :buffer "*hg files*")
+             :buffer "*helm hg files*")
     (setq helm-ls-hg-default-directory nil)))
 
 ;;;###autoload
