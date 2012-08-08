@@ -423,8 +423,6 @@
            (append actions (list '("Diff file" . helm-ls-hg-diff)
                                  '("Commit file(s)" . helm-ls-hg-commit)
                                  '("Revert file" . vc-hg-revert))))
-          ((string-match "^\\(A\\|R\\)" disp)
-           (append actions (list '("Commit file(s)" . helm-ls-hg-commit))))
           ((string-match "^[!]" disp)
            (append actions (list '("Hg delete"
                                    . (lambda (candidate)
