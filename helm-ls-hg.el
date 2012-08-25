@@ -20,7 +20,6 @@
 (require 'helm-locate)
 (require 'helm-files)
 
-(defvar helm-hg-files-cache (make-hash-table :test 'equal))
 (defvar helm-ls-hg-default-directory nil)
 (defvar helm-ls-hg-status-command 'vc-dir)
 
@@ -44,14 +43,11 @@
 (defun helm-hg-list-files ()
   (let ((dir (helm-hg-root)))
     (if (and dir (file-directory-p dir))
-        (helm-aif (gethash dir helm-hg-files-cache)
-            it
-          (with-temp-buffer
-            (call-process "hg" nil t nil "manifest")
-            (loop with ls = (split-string (buffer-string) "\n" t)
-                  for f in ls
-                  collect (concat dir f) into tmpls
-                  finally return (puthash dir tmpls helm-hg-files-cache))))
+        (with-temp-buffer
+          (call-process "hg" nil t nil "manifest")
+          (loop with ls = (split-string (buffer-string) "\n" t)
+                for f in ls
+                collect (concat dir f)))
         (error "Error: Not an hg repo (no .hg found)"))))
 
 (defvar helm-c-source-hg-list-files
