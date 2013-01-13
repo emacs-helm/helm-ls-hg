@@ -23,6 +23,9 @@
 (defvar helm-ls-hg-default-directory nil)
 (defvar helm-ls-hg-status-command 'vc-dir)
 
+;; Append visited files from `helm-c-source-hg-list-files' to `file-name-history'.
+(add-to-list 'helm-file-completion-sources "Hg files list")
+
 (defun helm-hg-root ()
   (with-temp-buffer
     (when (= 0 (call-process "hg" nil t nil "root"))

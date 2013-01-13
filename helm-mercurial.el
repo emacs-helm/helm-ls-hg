@@ -26,7 +26,7 @@
 
 ;;; Commentary:
 
-;; Need DVC and helm-config.el.
+;; Need DVC and helm.
  
 ;;; Code:
 (require 'xhg)
