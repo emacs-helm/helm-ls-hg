@@ -58,7 +58,17 @@
                "*helm hg*" (helm-hg-list-files))))
     (keymap . ,helm-generic-files-map)
     (candidates-in-buffer)
-    (type . file)))
+    (filtered-candidate-transformer . helm-ls-hg-transformer)
+    (action . ,(cdr (helm-get-actions-from-type helm-c-source-locate)))))))
+
+(defun helm-ls-hg-transformer (candidates source)
+  (loop for i in candidates
+        for abs = (expand-file-name i)
+        for disp = (if (and helm-ff-transformer-show-only-basename
+                            (not (string-match "[.]\\{1,2\\}$" i)))
+                       (helm-c-basename i) abs)
+        collect
+        (cons (propertize disp 'face 'helm-ff-file) abs)))
 
 (defun helm-ff-hg-find-files (candidate)
   (with-helm-default-directory helm-default-directory
