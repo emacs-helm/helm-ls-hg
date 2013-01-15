@@ -191,7 +191,7 @@
 (defun helm-hg-applied-transformer (candidates source)
   (let ((state (helm-hg-need-refresh))
         (cur-patch (car candidates)))
-    (if state
+    (if (and state cur-patch)
         (append (list (cons (concat "[R] "
                                     (propertize
                                      cur-patch
