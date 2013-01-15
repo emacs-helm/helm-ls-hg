@@ -26,11 +26,9 @@
 ;; Append visited files from `helm-c-source-hg-list-files' to `file-name-history'.
 (add-to-list 'helm-file-completion-sources "Hg files list")
 
-(defun helm-hg-root ()
-  (with-temp-buffer
-    (when (= 0 (call-process "hg" nil t nil "root"))
-      (file-name-as-directory
-       (replace-regexp-in-string "\n" "" (buffer-string))))))
+(defun* helm-hg-root (&optional (directory default-directory))
+  (let ((root (locate-dominating-file directory ".hg")))
+    (and root (file-name-as-directory root))))
 
 (defun helm-hg-root-p (candidate)
   ;; Check for file existence in case of creation
@@ -47,7 +45,7 @@
   (let ((dir (helm-hg-root)))
     (if (and dir (file-directory-p dir))
         (with-temp-buffer
-          (call-process "hg" nil t nil "manifest")
+          (process-file "hg" nil t nil "manifest")
           (loop with ls = (split-string (buffer-string) "\n" t)
                 for f in ls
                 collect (concat dir f)))
@@ -63,15 +61,12 @@
     (type . file)))
 
 (defun helm-ff-hg-find-files (candidate)
-  (let ((default-directory (file-name-as-directory
-                            (if (file-directory-p candidate)
-                                (expand-file-name candidate)
-                                (file-name-directory candidate)))))
-    (helm-run-after-quit
-     #'(lambda (d)
-         (let ((default-directory d))
-           (helm-hg-find-files-in-project)))
-     default-directory)))
+  (with-helm-default-directory helm-default-directory
+      (helm-run-after-quit
+       #'(lambda (d)
+           (let ((default-directory d))
+             (helm-hg-find-files-in-project)))
+       default-directory)))
 
 (defun helm-ls-hg-status ()
   (with-output-to-string
@@ -98,11 +93,7 @@
                                           (helm-hg-root))))))))
 
 (defun helm-ls-hg-status-transformer (candidates source)
-  (loop with root = (let ((default-directory
-                           (or helm-ls-hg-default-directory
-                               (with-helm-current-buffer
-                                 default-directory))))
-                      (helm-hg-root))
+  (loop with root = (helm-hg-root helm-default-directory)
         for i in candidates
         collect
         (cond ((string-match "^\\(M \\)\\(.*\\)" i)
