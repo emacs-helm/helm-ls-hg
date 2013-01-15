@@ -59,7 +59,7 @@
     (keymap . ,helm-generic-files-map)
     (candidates-in-buffer)
     (filtered-candidate-transformer . helm-ls-hg-transformer)
-    (action . ,(cdr (helm-get-actions-from-type helm-c-source-locate)))))))
+    (action . ,(cdr (helm-get-actions-from-type helm-c-source-locate)))))
 
 (defun helm-ls-hg-transformer (candidates source)
   (loop for i in candidates
