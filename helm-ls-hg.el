@@ -55,7 +55,7 @@
   `((name . "Hg files list")
     (init . (lambda ()
               (helm-init-candidates-in-buffer
-               "*helm hg*" (helm-hg-list-files))))
+               'global (helm-hg-list-files))))
     (keymap . ,helm-generic-files-map)
     (candidates-in-buffer)
     (filtered-candidate-transformer . helm-ls-hg-transformer)
@@ -90,7 +90,7 @@
   '((name . "Hg status")
     (init . (lambda ()
               (helm-init-candidates-in-buffer
-               "*hg status*"
+               'global
                (helm-ls-hg-status))))
     (candidates-in-buffer)
     (filtered-candidate-transformer . helm-ls-hg-status-transformer)
