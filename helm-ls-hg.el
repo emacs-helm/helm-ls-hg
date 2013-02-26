@@ -20,10 +20,15 @@
 (require 'helm-locate)
 (require 'helm-files)
 
+(defvaralias 'helm-c-source-hg-list-files 'helm-source-hg-list-files)
+(make-obsolete-variable 'helm-c-source-hg-list-files 'helm-source-hg-list-files "1.5.1")
+(defvaralias 'helm-c-source-ls-hg-status 'helm-source-ls-hg-status)
+(make-obsolete-variable 'helm-c-source-ls-hg-status 'helm-source-ls-hg-status "1.5.1")
+
 (defvar helm-ls-hg-default-directory nil)
 (defvar helm-ls-hg-status-command 'vc-dir)
 
-;; Append visited files from `helm-c-source-hg-list-files' to `file-name-history'.
+;; Append visited files from `helm-source-hg-list-files' to `file-name-history'.
 (add-to-list 'helm-file-completion-sources "Hg files list")
 
 (defun* helm-hg-root (&optional (directory default-directory))
@@ -51,7 +56,7 @@
                 collect (concat dir f)))
         (error "Error: Not an hg repo (no .hg found)"))))
 
-(defvar helm-c-source-hg-list-files
+(defvar helm-source-hg-list-files
   `((name . "Hg files list")
     (init . (lambda ()
               (helm-init-candidates-in-buffer
@@ -59,14 +64,14 @@
     (keymap . ,helm-generic-files-map)
     (candidates-in-buffer)
     (filtered-candidate-transformer . helm-ls-hg-transformer)
-    (action . ,(cdr (helm-get-actions-from-type helm-c-source-locate)))))
+    (action . ,(cdr (helm-get-actions-from-type helm-source-locate)))))
 
 (defun helm-ls-hg-transformer (candidates source)
   (loop for i in candidates
         for abs = (expand-file-name i)
         for disp = (if (and helm-ff-transformer-show-only-basename
                             (not (string-match "[.]\\{1,2\\}$" i)))
-                       (helm-c-basename i) abs)
+                       (helm-basename i) abs)
         collect
         (cons (propertize disp 'face 'helm-ff-file) abs)))
 
@@ -86,7 +91,7 @@
                nil t nil
                (list "status")))))
 
-(defvar helm-c-source-ls-hg-status
+(defvar helm-source-ls-hg-status
   '((name . "Hg status")
     (init . (lambda ()
               (helm-init-candidates-in-buffer
@@ -175,8 +180,8 @@
   (interactive)
   (setq helm-ls-hg-default-directory default-directory)
   (unwind-protect
-       (helm :sources '(helm-c-source-ls-hg-status
-                        helm-c-source-hg-list-files)
+       (helm :sources '(helm-source-ls-hg-status
+                        helm-source-hg-list-files)
              :buffer "*helm hg files*")
     (setq helm-ls-hg-default-directory nil)))
 
