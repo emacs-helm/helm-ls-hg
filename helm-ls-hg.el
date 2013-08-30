@@ -107,6 +107,30 @@
                                  (funcall helm-ls-hg-status-command
                                           (helm-hg-root))))))))
 
+(defun helm-ls-hg-qdiff ()
+  (with-output-to-string
+      (with-current-buffer standard-output
+        (apply #'process-file
+               "hg"
+               nil t nil
+               (list "status" "--rev" "-2")))))
+
+(defvar helm-source-ls-hg-qdiff
+  '((name . "Hg qdiff")
+    (init . (lambda ()
+              (helm-init-candidates-in-buffer
+               'global
+               (helm-ls-hg-qdiff))))
+    (candidates-in-buffer)
+    (filtered-candidate-transformer . helm-ls-hg-status-transformer)
+    (action-transformer . helm-ls-hg-status-action-transformer)
+    (persistent-action . helm-ls-hg-diff)
+    (persistent-help . "Diff")
+    (action . (("Find file" . helm-find-many-files)
+               ("Hg status" . (lambda (_candidate)
+                                 (funcall helm-ls-hg-status-command
+                                          (helm-hg-root))))))))
+
 (defun helm-ls-hg-status-transformer (candidates source)
   (loop with root = (helm-hg-root helm-default-directory)
         for i in candidates
@@ -181,6 +205,7 @@
   (setq helm-ls-hg-default-directory default-directory)
   (unwind-protect
        (helm :sources '(helm-source-ls-hg-status
+                        helm-source-ls-hg-qdiff
                         helm-source-hg-list-files)
              :buffer "*helm hg files*")
     (setq helm-ls-hg-default-directory nil)))
