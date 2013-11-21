@@ -17,6 +17,7 @@
 
 ;;; Code
 
+(require 'cl-lib)
 (require 'helm-locate)
 (require 'helm-files)
 
@@ -31,7 +32,7 @@
 ;; Append visited files from `helm-source-hg-list-files' to `file-name-history'.
 (add-to-list 'helm-file-completion-sources "Hg files list")
 
-(defun* helm-hg-root (&optional (directory default-directory))
+(cl-defun helm-hg-root (&optional (directory default-directory))
   (let ((root (locate-dominating-file directory ".hg")))
     (and root (file-name-as-directory root))))
 
@@ -51,9 +52,9 @@
     (if (and dir (file-directory-p dir))
         (with-temp-buffer
           (process-file "hg" nil t nil "manifest")
-          (loop with ls = (split-string (buffer-string) "\n" t)
-                for f in ls
-                collect (concat dir f)))
+          (cl-loop with ls = (split-string (buffer-string) "\n" t)
+                   for f in ls
+                   collect (concat dir f)))
         (error "Error: Not an hg repo (no .hg found)"))))
 
 (defvar helm-source-hg-list-files
@@ -67,13 +68,13 @@
     (action . ,(cdr (helm-get-actions-from-type helm-source-locate)))))
 
 (defun helm-ls-hg-transformer (candidates source)
-  (loop for i in candidates
-        for abs = (expand-file-name i)
-        for disp = (if (and helm-ff-transformer-show-only-basename
-                            (not (string-match "[.]\\{1,2\\}$" i)))
-                       (helm-basename i) abs)
-        collect
-        (cons (propertize disp 'face 'helm-ff-file) abs)))
+  (cl-loop for i in candidates
+           for abs = (expand-file-name i)
+           for disp = (if (and helm-ff-transformer-show-only-basename
+                               (not (string-match "[.]\\{1,2\\}$" i)))
+                          (helm-basename i) abs)
+           collect
+           (cons (propertize disp 'face 'helm-ff-file) abs)))
 
 (defun helm-ff-hg-find-files (candidate)
   (with-helm-default-directory helm-default-directory
@@ -108,41 +109,41 @@
                                           (helm-hg-root))))))))
 
 (defun helm-ls-hg-status-transformer (candidates source)
-  (loop with root = (helm-hg-root helm-default-directory)
-        for i in candidates
-        collect
-        (cond ((string-match "^\\(M \\)\\(.*\\)" i)
-               (cons (propertize i 'face '((:foreground "yellow")))
-                     (expand-file-name (match-string 2 i) root)))
-               ((string-match "^\\([?] \\{1\\}\\)\\(.*\\)" i)
-                (cons (propertize i 'face '((:foreground "red")))
-                      (expand-file-name (match-string 2 i) root)))
-               ((string-match "^\\([ARC] ?+\\)\\(.*\\)" i)
-                (cons (propertize i 'face '((:foreground "green")))
-                      (expand-file-name (match-string 2 i) root)))
-               ((string-match "^\\([!] \\)\\(.*\\)" i)
-                (cons (propertize i 'face '((:foreground "Darkgoldenrod3")))
-                      (expand-file-name (match-string 2 i) root)))
-               (t i))))
+  (cl-loop with root = (helm-hg-root helm-default-directory)
+           for i in candidates
+           collect
+           (cond ((string-match "^\\(M \\)\\(.*\\)" i)
+                  (cons (propertize i 'face '((:foreground "yellow")))
+                        (expand-file-name (match-string 2 i) root)))
+                 ((string-match "^\\([?] \\{1\\}\\)\\(.*\\)" i)
+                  (cons (propertize i 'face '((:foreground "red")))
+                        (expand-file-name (match-string 2 i) root)))
+                 ((string-match "^\\([ARC] ?+\\)\\(.*\\)" i)
+                  (cons (propertize i 'face '((:foreground "green")))
+                        (expand-file-name (match-string 2 i) root)))
+                 ((string-match "^\\([!] \\)\\(.*\\)" i)
+                  (cons (propertize i 'face '((:foreground "Darkgoldenrod3")))
+                        (expand-file-name (match-string 2 i) root)))
+                 (t i))))
 
 (defvar helm-ls-vc-delete-buffers-list nil)
 (defun helm-ls-vc-commit (candidate backend)
   (let* ((marked (helm-marked-candidates))
          (default-directory
           (file-name-directory (car marked))))
-    (loop for f in marked
-          unless (or (find-buffer-visiting f)
-                     (not (file-exists-p f)))
-          do (push (find-file-noselect f)
-                   helm-ls-vc-delete-buffers-list))
+    (cl-loop for f in marked
+             unless (or (find-buffer-visiting f)
+                        (not (file-exists-p f)))
+             do (push (find-file-noselect f)
+                      helm-ls-vc-delete-buffers-list))
     (add-hook 'vc-checkin-hook 'helm-vc-checkin-hook)
     (vc-checkin marked backend)))
 
 (defun helm-vc-checkin-hook ()
   (when helm-ls-vc-delete-buffers-list
-    (loop for b in helm-ls-vc-delete-buffers-list
-          do (kill-buffer b)
-          finally (setq helm-ls-vc-delete-buffers-list nil))))
+    (cl-loop for b in helm-ls-vc-delete-buffers-list
+             do (kill-buffer b)
+             finally (setq helm-ls-vc-delete-buffers-list nil))))
 
 (defun helm-ls-hg-commit (candidate)
   (helm-ls-vc-commit candidate 'Hg))
@@ -167,8 +168,8 @@
                                        (let ((default-directory
                                               (file-name-directory candidate))
                                              (marked (helm-marked-candidates)))
-                                         (loop for f in marked
-                                               do (vc-hg-delete-file f))))))))
+                                         (cl-loop for f in marked
+                                                  do (vc-hg-delete-file f))))))))
           (t actions))))
 
 (defun helm-ls-hg-diff (candidate)
