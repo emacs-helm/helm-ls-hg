@@ -1,4 +1,4 @@
-;;; helm-ls-hg.el --- List hg files in hg project.
+;;; helm-ls-hg.el --- List hg files in hg project. -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012 ~ 2014 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
@@ -70,7 +70,7 @@
     (filtered-candidate-transformer . helm-ls-hg-transformer)
     (action . ,(cdr (helm-get-actions-from-type helm-source-locate)))))
 
-(defun helm-ls-hg-transformer (candidates source)
+(defun helm-ls-hg-transformer (candidates _source)
   (cl-loop for i in candidates
            for abs = (expand-file-name i)
            for disp = (if (and helm-ff-transformer-show-only-basename
@@ -79,7 +79,7 @@
            collect
            (cons (propertize disp 'face 'helm-ff-file) abs)))
 
-(defun helm-ff-hg-find-files (candidate)
+(defun helm-ff-hg-find-files (_candidate)
   (with-helm-default-directory helm-default-directory
       (helm-run-after-quit
        #'(lambda (d)
@@ -111,7 +111,7 @@
                                  (funcall helm-ls-hg-status-command
                                           (helm-hg-root))))))))
 
-(defun helm-ls-hg-status-transformer (candidates source)
+(defun helm-ls-hg-status-transformer (candidates _source)
   (cl-loop with root = (helm-hg-root helm-default-directory)
            for i in candidates
            collect
@@ -130,7 +130,7 @@
                  (t i))))
 
 (defvar helm-ls-vc-delete-buffers-list nil)
-(defun helm-ls-vc-commit (candidate backend)
+(defun helm-ls-vc-commit (_candidate backend)
   (let* ((marked (helm-marked-candidates))
          (default-directory
           (file-name-directory (car marked))))
@@ -151,7 +151,7 @@
 (defun helm-ls-hg-commit (candidate)
   (helm-ls-vc-commit candidate 'Hg))
 
-(defun helm-ls-hg-status-action-transformer (actions candidate)
+(defun helm-ls-hg-status-action-transformer (actions _candidate)
   (let ((disp (helm-get-selection nil t)))
     (cond ((string-match "^[?]\\{1\\}" disp)
            (append actions
