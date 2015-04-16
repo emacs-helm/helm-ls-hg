@@ -77,7 +77,7 @@
            (cons (propertize disp 'face 'helm-ff-file) abs)))
 
 (defun helm-ff-hg-find-files (_candidate)
-  (with-helm-default-directory helm-default-directory
+  (with-helm-default-directory (helm-default-directory)
       (helm-run-after-quit
        #'(lambda (d)
            (let ((default-directory d))
@@ -109,7 +109,7 @@
                                           (helm-hg-root))))))))
 
 (defun helm-ls-hg-status-transformer (candidates _source)
-  (cl-loop with root = (helm-hg-root helm-default-directory)
+  (cl-loop with root = (helm-hg-root (helm-default-directory))
            for i in candidates
            collect
            (cond ((string-match "^\\(M \\)\\(.*\\)" i)
