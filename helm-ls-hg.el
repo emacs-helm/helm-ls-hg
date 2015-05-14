@@ -21,6 +21,7 @@
 
 (require 'cl-lib)
 (require 'vc)
+(require 'vc-hg)
 (require 'helm-locate)
 (require 'helm-files)
 
@@ -174,7 +175,12 @@
 
 (defun helm-ls-hg-diff (candidate)
   (with-current-buffer (find-file-noselect candidate)
-    (call-interactively #'vc-diff)))
+    (when (buffer-live-p (get-buffer "*vc-diff*"))
+      (kill-buffer "*vc-diff*")
+      (balance-windows))
+    (vc-hg-diff (list candidate))
+    (pop-to-buffer "*vc-diff*")
+    (diff-mode)))
 
 ;;;###autoload
 (defun helm-hg-find-files-in-project ()
