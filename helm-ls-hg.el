@@ -59,14 +59,11 @@
         (error "Error: Not an hg repo (no .hg found)"))))
 
 (defvar helm-source-hg-list-files
-  `((name . "Hg files list")
-    (init . (lambda ()
-              (helm-init-candidates-in-buffer
-               'global (helm-hg-list-files))))
-    (keymap . ,helm-generic-files-map)
-    (candidates-in-buffer)
-    (filtered-candidate-transformer . helm-ls-hg-transformer)
-    (action . ,(cdr (helm-get-actions-from-type helm-source-locate)))))
+  (helm-build-in-buffer-source "Hg files list"
+    :data (lambda () (helm-hg-list-files))
+    :keymap helm-generic-files-map
+    :filtered-candidate-transformer 'helm-ls-hg-transformer
+    :action (helm-actions-from-type-file)))
 
 (defun helm-ls-hg-transformer (candidates _source)
   (cl-loop for i in candidates
@@ -94,20 +91,16 @@
                (list "status")))))
 
 (defvar helm-source-ls-hg-status
-  '((name . "Hg status")
-    (init . (lambda ()
-              (helm-init-candidates-in-buffer
-               'global
-               (helm-ls-hg-status))))
-    (candidates-in-buffer)
-    (filtered-candidate-transformer . helm-ls-hg-status-transformer)
-    (action-transformer . helm-ls-hg-status-action-transformer)
-    (persistent-action . helm-ls-hg-diff)
-    (persistent-help . "Diff")
-    (action . (("Find file" . helm-find-many-files)
-               ("Hg status" . (lambda (_candidate)
-                                 (funcall helm-ls-hg-status-command
-                                          (helm-hg-root))))))))
+  (helm-build-in-buffer-source "Hg status"
+    :data (lambda () (helm-ls-hg-status))
+    :filtered-candidate-transformer 'helm-ls-hg-status-transformer
+    :action-transformer 'helm-ls-hg-status-action-transformer
+    :persistent-action 'helm-ls-hg-diff
+    :persistent-help "Diff"
+    :action '(("Find file" . helm-find-many-files)
+              ("Hg status" . (lambda (_candidate)
+                               (funcall helm-ls-hg-status-command
+                                        (helm-hg-root)))))))
 
 (defun helm-ls-hg-status-transformer (candidates _source)
   (cl-loop with root = (helm-hg-root (helm-default-directory))
