@@ -157,14 +157,14 @@
           ((string-match "^M" disp)
            (append actions (list '("Diff file" . helm-ls-hg-diff)
                                  '("Commit file(s)" . helm-ls-hg-commit)
-                                 '("Revert file" . (lambda (_candidate)
-                                                     (let ((marked (helm-marked-candidates)))
-                                                       (cl-loop for f in marked do
-                                                                (progn
-                                                                  (vc-hg-revert f)
-                                                                  (helm-aif (get-file-buffer f)
-                                                                      (with-current-buffer it
-                                                                        (revert-buffer t t)))))))))))
+                                 '("Revert file(s)" . (lambda (_candidate)
+                                                        (let ((marked (helm-marked-candidates)))
+                                                          (cl-loop for f in marked do
+                                                                   (progn
+                                                                     (vc-hg-revert f)
+                                                                     (helm-aif (get-file-buffer f)
+                                                                         (with-current-buffer it
+                                                                           (revert-buffer t t)))))))))))
           ((string-match "^[!]" disp)
            (append actions (list '("Hg delete"
                                    . (lambda (candidate)
