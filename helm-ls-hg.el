@@ -58,12 +58,14 @@
                    collect (concat dir f)))
         (error "Error: Not an hg repo (no .hg found)"))))
 
+(defvar helm-source-ls-hg-buffers nil)
+
 (defvar helm-source-hg-list-files
   (helm-build-in-buffer-source "Hg files list"
     :data (lambda () (helm-hg-list-files))
     :keymap helm-generic-files-map
     :filtered-candidate-transformer 'helm-ls-hg-transformer
-    :action (helm-actions-from-type-file)))
+    :action 'helm-type-file-actions))
 
 (defun helm-ls-hg-transformer (candidates _source)
   (cl-loop for i in candidates
@@ -155,7 +157,14 @@
           ((string-match "^M" disp)
            (append actions (list '("Diff file" . helm-ls-hg-diff)
                                  '("Commit file(s)" . helm-ls-hg-commit)
-                                 '("Revert file" . vc-hg-revert))))
+                                 '("Revert file" . (lambda (_candidate)
+                                                     (let ((marked (helm-marked-candidates)))
+                                                       (cl-loop for f in marked do
+                                                                (progn
+                                                                  (vc-hg-revert f)
+                                                                  (helm-aif (get-file-buffer f)
+                                                                      (with-current-buffer it
+                                                                        (revert-buffer t t)))))))))))
           ((string-match "^[!]" disp)
            (append actions (list '("Hg delete"
                                    . (lambda (candidate)
@@ -179,8 +188,14 @@
 (defun helm-hg-find-files-in-project ()
   (interactive)
   (setq helm-ls-hg-default-directory default-directory)
+  (unless helm-source-ls-hg-buffers
+    (setq helm-source-ls-hg-buffers
+          (helm-make-source "Buffers in project" 'helm-source-buffers
+            :buffer-list (lambda () (helm-browse-project-get-buffers
+                                     (helm-hg-root))))))
   (unwind-protect
-       (helm :sources '(helm-source-ls-hg-status
+       (helm :sources '(helm-source-ls-hg-buffers
+                        helm-source-ls-hg-status
                         helm-source-hg-list-files)
              :buffer "*helm hg files*")
     (setq helm-ls-hg-default-directory nil)))
