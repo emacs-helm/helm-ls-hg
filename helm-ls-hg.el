@@ -208,6 +208,7 @@
        (helm :sources '(helm-source-ls-hg-buffers
                         helm-source-ls-hg-status
                         helm-source-hg-list-files)
+             :ff-transformer-show-only-basename nil
              :buffer "*helm hg files*")
     (setq helm-ls-hg-default-directory nil)))
 
