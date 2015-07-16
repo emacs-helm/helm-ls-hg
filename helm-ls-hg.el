@@ -58,12 +58,21 @@
                    collect (concat dir f)))
         (error "Error: Not an hg repo (no .hg found)"))))
 
+(defun helm-ls-hg-header-name (name)
+  (format "%s (%s)"
+          name
+          (with-temp-buffer
+            (call-process-shell-command "hg branch" nil t)
+            (buffer-substring-no-properties (goto-char (point-min))
+                                            (line-end-position)))))
+
 (defvar helm-source-ls-hg-buffers nil)
 
 (defvar helm-source-hg-list-files
   (helm-build-in-buffer-source "Hg files list"
     :data (lambda () (helm-hg-list-files))
     :keymap helm-generic-files-map
+    :header-name 'helm-ls-hg-header-name
     :filtered-candidate-transformer 'helm-ls-hg-transformer
     :action 'helm-type-file-actions))
 
@@ -98,6 +107,7 @@
     :filtered-candidate-transformer 'helm-ls-hg-status-transformer
     :action-transformer 'helm-ls-hg-status-action-transformer
     :persistent-action 'helm-ls-hg-diff
+    :header-name 'helm-ls-hg-header-name
     :persistent-help "Diff"
     :action '(("Find file" . helm-find-many-files)
               ("Hg status" . (lambda (_candidate)
@@ -190,7 +200,8 @@
   (setq helm-ls-hg-default-directory default-directory)
   (unless helm-source-ls-hg-buffers
     (setq helm-source-ls-hg-buffers
-          (helm-make-source "Buffers in project" 'helm-source-buffers
+          (helm-make-source "Buffers in hg project" 'helm-source-buffers
+            :header-name 'helm-ls-hg-header-name
             :buffer-list (lambda () (helm-browse-project-get-buffers
                                      (helm-hg-root))))))
   (unwind-protect
