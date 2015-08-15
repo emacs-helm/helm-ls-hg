@@ -87,7 +87,7 @@
 
 (defun helm-ff-hg-find-files (_candidate)
   (with-helm-default-directory (helm-default-directory)
-      (helm-run-after-quit
+      (helm-run-after-exit
        #'(lambda (d)
            (let ((default-directory d))
              (helm-hg-find-files-in-project)))
