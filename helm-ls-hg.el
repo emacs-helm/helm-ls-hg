@@ -55,7 +55,7 @@
           (process-file "hg" nil t nil "manifest")
           (cl-loop with ls = (split-string
                               (replace-regexp-in-string
-                               "^\\([0-9]\\)\\{1,\\} +\\(\\* +\\|\\)"
+                               "^\\([0-9]\\{1,\\}\\) +\\(\\* +\\|\\)"
                                ""
                                (buffer-string)) "\n" t)
                    for f in ls
