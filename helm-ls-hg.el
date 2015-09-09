@@ -209,8 +209,8 @@
             :buffer-list (lambda () (helm-browse-project-get-buffers
                                      (helm-hg-root))))))
   (unwind-protect
-       (helm :sources '(helm-source-ls-hg-buffers
-                        helm-source-ls-hg-status
+       (helm :sources '(helm-source-ls-hg-status
+                        helm-source-ls-hg-buffers
                         helm-source-hg-list-files)
              :ff-transformer-show-only-basename nil
              :buffer "*helm hg files*")
