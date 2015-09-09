@@ -53,7 +53,11 @@
     (if (and dir (file-directory-p dir))
         (with-temp-buffer
           (process-file "hg" nil t nil "manifest")
-          (cl-loop with ls = (split-string (buffer-string) "\n" t)
+          (cl-loop with ls = (split-string
+                              (replace-regexp-in-string
+                               "^\\([0-9]\\{1,\\}\\) +\\(\\* +\\|\\)"
+                               ""
+                               (buffer-string)) "\n" t)
                    for f in ls
                    collect (concat dir f)))
         (error "Error: Not an hg repo (no .hg found)"))))
@@ -208,6 +212,7 @@
        (helm :sources '(helm-source-ls-hg-buffers
                         helm-source-ls-hg-status
                         helm-source-hg-list-files)
+             :ff-transformer-show-only-basename nil
              :buffer "*helm hg files*")
     (setq helm-ls-hg-default-directory nil)))
 
